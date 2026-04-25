@@ -1,4 +1,5 @@
 #include"board.h"
+#include"minimax.h"
 #include<iostream>
 
 void show(int currentTurn,player p) {
@@ -8,26 +9,30 @@ void show(int currentTurn,player p) {
 
 int main () {
     GoGame g;
+    Minimax minimax(WHITE,4,1.2);
     int currentTurn=0;
     while (!g.GameOver()) {
         g.show();
         currentTurn++;
-        player p=CurrentPlayer(currentTurn);
-        show(currentTurn,p);
         int x,y;
-        std::cin>>x>>y;
-        if (!g.validPosition(x,y)) {
-            std::cout<<"invalid position"<<std::endl;
-            currentTurn--;
-            continue;
+        player p=CurrentPlayer(currentTurn);
+        if (p==minimax.getSelf()){
+            auto move=minimax.getBestMove(g);
+            x=move.first,y=move.second;
+            if (x==-1||y==-1){
+                std::cout<<"cant find"<<std::endl;
+            }
+            g.set(x,y,p);
         }
-        g.set(x,y,p);
-        if (g.Win(x,y,p)) {
-            std::cout<<(p==BLACK? "black":"white")<<" win"<<std::endl;
+        else {
+            std::cin>>x>>y;
+            if(!g.outOfRange(x,y)){
+                g.set(x,y,p);
+            }
+        }
+        if (g.Win(x,y,p)){
+            std::cout<<(p==BLACK? "BLACK":"WHITE")<<" win"<<std::endl;
             break;
-        }
-        if (g.GameOver()) {
-            std::cout<<"game over"<<std::endl;
         }
     }
     return 0;
