@@ -113,19 +113,18 @@ bool GoGame::GameOver() const{
 void GoGame::show() const {
     std::cout<<"   ";
     for (int j=1;j<=size;j++) {
-        if (j<10) std::cout<<" "<<j<<" ";
-        else std::cout<<j<<" ";
+        std::cout.width(2);
+        std::cout<<j<<" ";
     }
     std::cout<<"\n";
 
     for (int i=1;i<=size;i++) {
-        if (i<10) std::cout<<" "<<i<<" ";
-        else std::cout<<i<<" ";
-
+        std::cout.width(2);
+        std::cout<<i<<" ";
         for (int j=1;j<=size;j++) {
-            if (graph[i][j]==BLACK) std::cout<<"● ";
-            else if (graph[i][j]==WHITE) std::cout<<"○ ";
-            else std::cout<<"┼ ";
+            if (graph[i][j]==BLACK) std::cout<<" ● ";
+            else if (graph[i][j]==WHITE) std::cout<<" ○ ";
+            else std::cout<<" · ";
         }
         std::cout<<"\n";
     }
