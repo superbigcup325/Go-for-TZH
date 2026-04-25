@@ -9,7 +9,7 @@ void show(int currentTurn,player p) {
 
 int main () {
     GoGame g;
-    Minimax minimax(WHITE,4,1.2);
+    Minimax minimax(WHITE,4,1.1);
     int currentTurn=0;
     while (!g.GameOver()) {
         g.show();
@@ -25,13 +25,20 @@ int main () {
             g.set(x,y,p);
         }
         else {
-            std::cin>>x>>y;
-            if(!g.outOfRange(x,y)){
-                g.set(x,y,p);
+            // std::cin>>x>>y;
+            // if(!g.outOfRange(x,y)){
+            //     g.set(x,y,p);
+            // }
+            auto move=minimax.getBestMove(g);
+            x=move.first,y=move.second;
+            if (x==-1||y==-1){
+                std::cout<<"cant find"<<std::endl;
             }
+            g.set(x,y,p);
         }
         if (g.Win(x,y,p)){
             std::cout<<(p==BLACK? "BLACK":"WHITE")<<" win"<<std::endl;
+            g.show();
             break;
         }
     }
