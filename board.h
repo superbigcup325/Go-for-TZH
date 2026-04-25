@@ -1,5 +1,5 @@
-#ifndef OOP_GO_H
-#define OOP_GO_H
+#ifndef OOP_BOARD_H
+#define OOP_BOARD_H
 
 #include <iostream>
 #include <vector>
@@ -113,4 +113,4 @@ std::vector<std::vector<int>> GoGame::getGraph() {
     return graph;
 }
 
-#endif //OOP_GO_H
+#endif //OOP_BOARD_H
