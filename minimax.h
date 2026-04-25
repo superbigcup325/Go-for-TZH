@@ -10,7 +10,7 @@ class Minimax {
 private:
     player self;
     player opponent;
-    const double defendWeight=1.0;
+    const double defendWeight=1.1;
     int depth;
     int nodeCount;
 
@@ -19,29 +19,30 @@ private:
         int openEnds=0;
 
         int score() const {
-            if (count >= 5) return 1000000;  // 五连
+            if (count >= 5) return 1000000;
             if (count == 4) {
-                if (openEnds == 2) return 100000;  // 活四
-                if (openEnds == 1) return 10000;   // 死四
+                if (openEnds == 2) return 100000;
+                if (openEnds == 1) return 15000;
             }
             if (count == 3) {
-                if (openEnds == 2) return 10000;   // 活三
-                if (openEnds == 1) return 1000;    // 死三
+                if (openEnds == 2) return 5000;
+                if (openEnds == 1) return 800;
             }
             if (count == 2) {
-                if (openEnds == 2) return 1000;    // 活二
-                if (openEnds == 1) return 100;     // 死二
+                if (openEnds == 2) return 500;
+                if (openEnds == 1) return 50;
             }
             if (count == 1) {
-                if (openEnds == 2) return 100;     // 活一
-                if (openEnds == 1) return 10;      // 死一
+                if (openEnds == 2) return 30;
+                if (openEnds == 1) return 5;
             }
             return 0;
         }
     };
 
     Pattern analyzeDirection(const GoGame& g,int x,int y,int dx,int dy,player p) const;
-    int evaluatePosition(const GoGame& g,int x,int y,player p) const ;
+    int evaluatePiece(const GoGame& g,int x,int y,player p) const;
+    int evaluateEmpty(const GoGame& g,int x,int y) const;
     double evaluate(const GoGame& g) const;
     bool checkWin(const GoGame& g,player p) const;
     std::vector<std::pair<int,int>> getCandidateMoves(const GoGame& g) const;
@@ -85,31 +86,64 @@ Minimax::Pattern Minimax::analyzeDirection(const GoGame& g,int x,int y,int dx,in
     return pattern;
 }
 
-// 单个空位威胁评估
-int Minimax::evaluatePosition(const GoGame& g,int x,int y,player p) const {
+int Minimax::evaluatePiece(const GoGame& g,int x,int y,player p) const {
+    if (g.getPlayer(x,y)!=p) return 0;
+    int score=0;
+    std::vector<std::pair<int,int>> directions={
+        {0,1},{1,0},{1,1},{1,-1}
+    };
+    for (auto& [dx,dy]:directions) {
+        int bx=x-dx,by=y-dy;
+        if (!g.outOfRange(bx,by)&&g.getPlayer(bx,by)==p) continue;
+
+        Pattern pattern;
+        pattern.count=1;
+        pattern.openEnds=0;
+
+        int nx=x+dx,ny=y+dy;
+        while (!g.outOfRange(nx,ny)&&g.getPlayer(nx,ny)==p) {
+            nx+=dx;
+            ny+=dy;
+            pattern.count++;
+        }
+        if (!g.outOfRange(nx,ny)&&g.getPlayer(nx,ny)==NONE) {
+            pattern.openEnds++;
+        }
+        if (!g.outOfRange(bx,by)&&g.getPlayer(bx,by)==NONE) {
+            pattern.openEnds++;
+        }
+
+        score+=pattern.score();
+    }
+    return score;
+}
+
+int Minimax::evaluateEmpty(const GoGame& g,int x,int y) const {
     if (g.getPlayer(x,y)!=NONE) return 0;
     int score=0;
     std::vector<std::pair<int,int>> directions={
         {0,1},{1,0},{1,1},{1,-1}
     };
     for (auto& [dx,dy]:directions) {
-        score+=analyzeDirection(g,x,y,dx,dy,p).score();
+        score+=analyzeDirection(g,x,y,dx,dy,BLACK).score();
+        score+=analyzeDirection(g,x,y,dx,dy,WHITE).score();
     }
     return score;
 }
 
-// 全局评估
 double Minimax::evaluate(const GoGame& g) const {
     int selfScore=0;
     int opponentScore=0;
     int size=g.getSize();
 
-    // 遍历，计算每个空位的威胁
     for (int x=1;x<=size;x++) {
         for (int y=1;y<=size;y++) {
-            if (g.getPlayer(x,y)==NONE){
-                selfScore+=evaluatePosition(g,x,y,self);
-                opponentScore+=evaluatePosition(g,x,y,opponent);
+            player p=g.getPlayer(x,y);
+            if (p==self) {
+                selfScore+=evaluatePiece(g,x,y,self);
+            }
+            else if (p==opponent) {
+                opponentScore+=evaluatePiece(g,x,y,opponent);
             }
         }
     }
@@ -153,12 +187,9 @@ std::vector<std::pair<int,int>> Minimax::getCandidateMoves(const GoGame& g) cons
         return candidates;
     }
 
-    // 排序加快剪枝
     std::sort(candidates.begin(),candidates.end(),
         [&](const std::pair<int,int>& a,const std::pair<int,int>& b) {
-            int scoreA=evaluatePosition(g,a.first,a.second,BLACK)+evaluatePosition(g,a.first,a.second,WHITE);
-            int scoreB=evaluatePosition(g,b.first,b.second,BLACK)+evaluatePosition(g,b.first,b.second,WHITE);
-            return scoreA>scoreB;
+            return evaluateEmpty(g,a.first,a.second)>evaluateEmpty(g,b.first,b.second);
         });
     
     // 限制数量
