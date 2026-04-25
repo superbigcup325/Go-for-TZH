@@ -38,7 +38,7 @@ public:
     bool GameOver() const;
 
     // 显示棋盘
-    void show();
+    void show() const;
 
     // 获取棋盘状态
     const std::vector<std::vector<int>>& getGraph() const;
@@ -110,11 +110,24 @@ bool GoGame::GameOver() const{
     return currentCount>=maxCount;
 }
 
-void GoGame::show() {
+void GoGame::show() const {
+    std::cout<<"   ";
+    for (int j=1;j<=size;j++) {
+        if (j<10) std::cout<<" "<<j<<" ";
+        else std::cout<<j<<" ";
+    }
+    std::cout<<"\n";
+
     for (int i=1;i<=size;i++) {
+        if (i<10) std::cout<<" "<<i<<" ";
+        else std::cout<<i<<" ";
+
         for (int j=1;j<=size;j++) {
-            std::cout<<(graph[i][j]==BLACK? "●":graph[i][j]==WHITE? "○":" ")<<(j==size? "\n":" ");
+            if (graph[i][j]==BLACK) std::cout<<"● ";
+            else if (graph[i][j]==WHITE) std::cout<<"○ ";
+            else std::cout<<"┼ ";
         }
+        std::cout<<"\n";
     }
 }
 
