@@ -4,7 +4,7 @@
 #include <iostream>
 #include <vector>
 
-enum player {BLACK=1,WHITE};
+enum player {NONE,BLACK,WHITE};
 
 class GoGame {
 private:
@@ -16,10 +16,7 @@ private:
     // std::string blackC="";
     // std::string whiteC="";
     std::vector<std::pair<int,int>> directions={
-        {0,1},
-        {1,0},
-        {1,1},
-        {1,-1}
+        {0,1},{1,0},{1,1},{1,-1}
     };
 
 public:
@@ -28,25 +25,37 @@ public:
     // 落子
     void set(const int x,const int y,const player currentPlayer);
 
-    bool outOfRange(const int x,const int y);
+    // 超出范围
+    bool outOfRange(const int x,const int y) const;
 
     // 坐标是否合法
     bool validPosition(const int x,const int y);
 
     // 判断是否有胜利
-    bool Win(const int x,const int y,const int currentPlayer);
+    bool Win(const int x,const int y,const player currentPlayer) const;
 
     // 判断是否结束 平局？
-    bool GameOver();
+    bool GameOver() const;
 
+    // 显示棋盘
     void show();
 
-    std::vector<std::vector<int>> getGraph();
+    // 获取棋盘状态
+    const std::vector<std::vector<int>>& getGraph() const;
+
+    // 获取棋盘大小
+    int getSize() const;
 
     // 获取当前角色
     friend player CurrentPlayer(int currentTurn);
-};
 
+    // 撤销上一步
+    void undo(const int x,const int y);
+
+    // 获取指定位置的子色
+    player getPlayer(const int x,const int y) const;
+};
+    
 inline player CurrentPlayer(const int currentTurn) {
     return (currentTurn&1? BLACK:WHITE);
 }
@@ -68,7 +77,7 @@ void GoGame::set(const int x,const int y,const player currentPlayer) {
     currentCount++;
 }
 
-bool GoGame::outOfRange(const int x,const int y) {
+bool GoGame::outOfRange(const int x,const int y) const {
     return (x<1||x>size||y<1||y>size);
 }
 
@@ -79,7 +88,7 @@ bool GoGame::validPosition(const int x,const int y) {
     else return false;
 }
 
-bool GoGame::Win(const int x,const int y,const int currentPlayer) {
+bool GoGame::Win(const int x,const int y,const player currentPlayer) const{
     for (auto [dx,dy]:directions) {
         int count=1;
         int nx=x+dx,ny=y+dy;
@@ -97,7 +106,7 @@ bool GoGame::Win(const int x,const int y,const int currentPlayer) {
     return false;
 }
 
-bool GoGame::GameOver() {
+bool GoGame::GameOver() const{
     return currentCount>=maxCount;
 }
 
@@ -109,8 +118,24 @@ void GoGame::show() {
     }
 }
 
-std::vector<std::vector<int>> GoGame::getGraph() {
+const std::vector<std::vector<int>>& GoGame::getGraph() const {
     return graph;
+}
+
+inline void GoGame::undo(const int x,const int y) {
+    if (outOfRange(x,y)) return;
+    if (currentCount==0) return;
+    currentCount--;
+    graph[x][y]=0;
+}
+
+player GoGame::getPlayer(const int x,const int y) const{
+    if (outOfRange(x,y)) return NONE;
+    return graph[x][y]==BLACK? BLACK:graph[x][y]==WHITE? WHITE:NONE;
+}
+
+int GoGame::getSize() const{
+    return size;
 }
 
 #endif //OOP_BOARD_H
